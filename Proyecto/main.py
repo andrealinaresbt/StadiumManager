@@ -10,6 +10,7 @@ from general import General
 from cliente import Client
 from bebida import Bebida
 from comida import Food
+import random
 
 #FUNCIONES DE MOSTRAR
             #EQUIPOS
@@ -19,7 +20,7 @@ def viewTeams(teams):
             #ESTADIOS
 def viewStadium( stadiums):
     for stadium in Stadium.estadio:
-        print(stadium.mostrarStadiums()) 
+        stadium.mostrarStadiums()
             #JUEGOS
 def viewGames(games):
     for game in Games.partidos:
@@ -33,7 +34,21 @@ def viewMenus(stadiums):
     for product in Product.productos:
         product.mostrar()
 
-
+def invoice(clientName, clientID, pickSeat, ticket,ticketType, descuento, ticketprecio, total, clientGame, games):
+    print(f'''
+****************** INVOICE ******************
+CLIENT NAME: {clientName}
+CLIENT ID: {clientID}
+SEAT: {pickSeat}
+TYPE OF TICKET: {ticketType}
+CODE: {ticket}
+DISCOUNT: {descuento}
+PRECIO IVA: {ticketprecio}
+TOTAL:{total}''')
+    for game in games:
+        if str(clientGame) == game['id']:
+            print('GAME:', game['home_team'], 'vs.', game['away_team'] )
+            print('____________________________________')
 #FUNCIONES DE BUSQUEDA
             #SEARCH BY TEAM
 def searchTeam(teams, games, country_name, stadiums):
@@ -132,6 +147,28 @@ def searchPriceRange(restaurantList, lowerNum, higherNum):
                     else:
                         print('TYPE: Prepared\n')
             
+def processPurchase(pickSeat, clientTicket, ticketIDGen, ticketsIDVIP, clientName, clientID, clientAge, clientGame):
+    while True:
+        #viewSeats(stadium) 
+        buyConfirm = input('Do you confirm your purchase? Y-Yes N-No: ').upper()
+        if buyConfirm.isnumeric() == True:
+            print('This is not an accepted value, its either Y or N. Not a number.')
+        elif buyConfirm == 'Y' or buyConfirm == "N":
+            if buyConfirm == 'Y':
+                if clientTicket == 'GENERAL':
+                    clientTicketCode = random.randint(1000,4000)
+                    ticketIDGen.append(clientTicketCode)
+                    Client.clients.append(General(clientName, clientID, clientAge,clientGame, pickSeat, clientTicket,  clientTicketCode ))
+                    return clientTicketCode
+                    
+                if clientTicket == 'VIP':
+                    clientTicketCode = random.randint(1000,4000)
+                    ticketsIDVIP.append(clientTicketCode)
+                    Client.clients.append(VIP(clientName, clientID, clientAge,clientGame, pickSeat, clientTicket,  clientTicketCode))
+                    return clientTicketCode
+
+def getDescuento(cedula):
+    pass
 
 #FUNCIONES DE ESTETICA QUE HACEN QUE SE VEA MAS AMIGABLE EL CODIGO
 def welcome():
@@ -148,11 +185,16 @@ def goodbye():
 def main():
     equipos_name =[]
     dias = []
-    clientdata = []
-    bebidaAlcohol = None
     gamesID = []
     productStock = []
     restaurantList = []
+    ticketIDGen = []
+    ticketsIDVIP = []
+    descuento = 0
+    ticketsUsados = []
+    cedulaVIPs= []
+
+
     #BUSQUEDA DE INFORMACION DE LAS APIS
     url_equipos = "https://raw.githubusercontent.com/Algoritmos-y-Programacion-2223-1/api-proyecto/main/teams.json"
     url_estadios = "https://raw.githubusercontent.com/Algoritmos-y-Programacion-2223-1/api-proyecto/main/stadiums.json"
@@ -180,7 +222,9 @@ def main():
     for team in teams:
         equipos_name.append(team['name'].upper())
         #ESTADIOS
+    
     for stadium in stadiums:
+        
         Stadium.estadio.append(Stadium(stadium['id'], stadium['name'],
         stadium['capacity'], stadium['location'], stadium['restaurants']))
         #PRODUCTOS 
@@ -326,7 +370,7 @@ def main():
                 
                     break
 
-                #MODULO 2, REGISTRO DE VENTA DE ENTRADAS <<< NOT FINISHED >>>  
+                #MODULO 2, REGISTRO DE VENTA DE ENTRADAS <<< NOT FINISHED >>> FALTA MUESTRA DE ASIENTOS Y DESCUENTO  
             elif mainPath == 2:
                 while True:
                     #DATOS DEL CLIENTE
@@ -385,17 +429,32 @@ def main():
                     ----->  """))       
                                         if clientTicket.isnumeric() == True:
                                             clientTicket = int(clientTicket)
-                                            if clientTicket == 1:
-                                                clientTicket = 'VIP'
-                                                break
-                                               
+                                            if clientTicket == 1 or clientTicket ==2:
+                                                if clientTicket ==1:
+                                                    clientTicket = 'VIP'
+                                                    cedulaVIPs.append(clientID)
+                                                    pickSeat = int(input('Please pick a seat: '))
+                                                    ticket = processPurchase(pickSeat,clientTicket, ticketIDGen, ticketsIDVIP, clientName, clientID, clientAge, clientGame)
+                                                    ticketIVA = 120+(120*0.16)
+                                                    total = ticketIVA - descuento
                                                 
-
-                                            elif clientTicket == 2:
-                                                clientTicket = 'GENERAL'
-                                                break
+                                                    invoice(clientName, clientID, pickSeat, ticket, 
+                                                    clientTicket, descuento, ticketIVA, total, clientGame, games)
+                                                    break
+                           
+                                                
+                                                elif clientTicket == 2:
+                                                    clientTicket = 'GENERAL'
+                                                    pickSeat = int(input('Please pick a seat: '))
+                                                    ticket = processPurchase(pickSeat,clientTicket, ticketIDGen, ticketsIDVIP,
+                                                     clientName, clientID, clientAge, clientGame)
+                                                    ticketIVA = 50+(50*0.16)
+                                                    total = ticketIVA - descuento
+                                                    invoice(clientName, clientID, pickSeat, ticket, 
+                                                    clientTicket, descuento, ticketIVA, total, clientGame, games)
+                                                    break
                                             
-                                            
+               
                                             else:
                                                 print('This is not an available option. Try again')
                                             
@@ -404,13 +463,35 @@ def main():
                                 
                             else:
                                     print('This ticket isnt available')
-                        break
 
-                    while True:
-                        viewSeats(stadium)       
-                
-                #MODULO 3, GESTION DE RESTAURANTES Y BUSQUEDA DE PRODUCTOS
+                            break
+                        else:
+                            print('This is not an ID.')           
+                            
+                    break  
+                #FALTA MOSTRAR LA ENTRADA AL PARTIDO
             elif mainPath == 3:
+                while True:
+                    gameID = int(input('Please enter the game ID of the game your attending: '))
+                    if str(gameID) in gamesID:
+                        verifyTicket = int(input('Please enter your ticket code: '))
+                        if verifyTicket not in ticketsUsados:
+                            if verifyTicket in ticketsIDVIP or verifyTicket in ticketIDGen:
+                                ticketsUsados.append(verifyTicket)
+                                print('Welcome!')
+
+                                break
+                            else:
+                                print('Your code is fake\n')
+                        else:
+                            print('Someone already used this ticket\n')
+                    else:
+                        print('This game does not exist. \n')
+                    
+
+              
+                #MODULO 3, GESTION DE RESTAURANTES Y BUSQUEDA DE PRODUCTOS
+            elif mainPath == 4:
                 
                 pathRestaurants = int(input('''What would you like to do?
 1. See all the menus.

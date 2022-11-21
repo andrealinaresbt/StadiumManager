@@ -1,20 +1,19 @@
 class Stadium:
     estadio = []
     seats =[]
-    def __init__(self, id, name, capacity, location, restaurants):
+    def __init__(self, id, name, capacity, location, restaurant):
         self.id = id
         self.name = name
         self.capacity = capacity
         self.location = location
-        self.restaurants = restaurants
+        self.restaurant = restaurant
 
     def mostrarStadiums(self):
         print(f'''********{self.name}*********
 ID: {self.id}
 CAPACITY: {self.capacity}
 LOCATION: {self.location}''') 
-        for restaurant in self.restaurants:
-            print(restaurant)
+        for restaurant in self.restaurant:
             print(f"RESTAURANT: {restaurant['name']}\n")
 
     def mostrarAsiento(self):

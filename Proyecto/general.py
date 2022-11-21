@@ -1,5 +1,12 @@
 from cliente import Client
 
 class General(Client):
-    def __init__(self, name, id, age, game, ticket,pric):
-        super().__init__(name, id, age, game, ticket)
+    def __init__(self, name, id, age, game, seat, ticket, confirmation):
+        super().__init__(name, id, age, game, seat, ticket)
+        self.confirmation =confirmation
+    def mostrarClient(self):
+        super().mostrarClient()
+        print(f'CONFIRMATION CODE: {self.confirmation}')
+    
+
+    
