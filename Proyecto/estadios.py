@@ -7,6 +7,7 @@ class Stadium:
         self.capacity = capacity
         self.location = location
         self.restaurant = restaurant
+        self.seats = [[0 for i in range(self.capacity[1])] for _ in range(self.capacity[0])]
 
     def mostrarStadiums(self):
         print(f'''********{self.name}*********
@@ -16,15 +17,7 @@ LOCATION: {self.location}''')
         for restaurant in self.restaurant:
             print(f"RESTAURANT: {restaurant['name']}\n")
 
-    def mostrarAsiento(self):
-        seats = []
-        for row in self.capacity[0]:
-            fila = []
-            for seat in self.capacity[1]:
-                fila.append("V")
-            seats.append(fila)
-        
-        print(seats)
+    
 
     def verMenus(self):
         for restaurant in self.restaurants:

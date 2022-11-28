@@ -10,166 +10,359 @@ from general import General
 from cliente import Client
 from bebida import Bebida
 from comida import Food
+from ticket import Ticket
 import random
+from collections import Counter
+import math
 
 #FUNCIONES DE MOSTRAR
+           
             #EQUIPOS
+
 def viewTeams(teams):
     for equipos in Equipos.equipos:
         print(equipos.mostrarEquipo())
+          
             #ESTADIOS
+
 def viewStadium( stadiums):
     for stadium in Stadium.estadio:
         stadium.mostrarStadiums()
+           
             #JUEGOS
+
 def viewGames(games):
     for game in Games.partidos:
         print(game.mostrarGames())
+            
             #ASIENTOS
-def viewSeats(stadiums):
-    for stadium in Stadium.estadio:
-        stadium.mostrarAsiento()
+def viewSeats(clientGame):
+    searchedSeat =[]
+    for game in Games.partidos:
+            if clientGame in [game.id]:
+                
+                searchedSeat.append(game)
+    for game in searchedSeat:
+        for stadium in Stadium.estadio:
+            if clientGame == game.id:
+                if game.stadium_id == stadium.id:
+                
+                    row_seat, column_seat = stadium.mostrarAsiento()
+                
+                    return row_seat, column_seat
+
             #MENUS
 def viewMenus(stadiums):
     for product in Product.productos:
+        print('______________________')
+        print('        MENU          ')
+        print(product.restaurant)
         product.mostrar()
+        print('______________________')
 
-def invoice(clientName, clientID, pickSeat, ticket,ticketType, descuento, ticketprecio, total, clientGame, games):
-    print(f'''
+
+#FUNCIONES DE BUSQUEDA
+
+            #SEARCH BY TEAM
+def searchTeam(country_name):
+   searchedMatch=[]
+   for game in Games.partidos:
+            if country_name.upper() in [game.home_team.upper()] or country_name in [game.away_team.upper()]:
+                searchedMatch.append(game)
+
+   if len(searchedMatch) == 0:
+        print(f'The team {country_name} is not on the world cup')
+
+   else:
+        print(f"\n{country_name}'s matches in the world cup 2022 are: ")
+
+        for game in searchedMatch:
+            print(f'''HOME TEAM: {game.home_team}
+AWAY TEAM: {game.away_team}
+DATE: {game.date}
+ID: {game.id}
+STADIUM: {game.stadium} 
+ID STADIUM: {game.stadium_id}
+''')
+             
+            #SEARCH BY STADIUM
+
+def searchStadiums(stadium_ID):
+    searchedStadium =[]
+    for game in Games.partidos:
+            if stadium_ID in [game.stadium_id]:
+                
+                    searchedStadium.append(game)
+
+    if len(searchedStadium) != 0:
+        print(f"\nThe games being played at this stadium are: ")
+        for game in searchedStadium:
+             print(f'''HOME TEAM: {game.home_team}
+AWAY TEAM: {game.away_team}
+DATE: {game.date}
+ID: {game.id}
+STADIUM: {game.stadium} 
+ID STADIUM: {game.stadium_id}
+''')
+           
+            #SEARCH BY DATE OF GAME
+
+def searchDate(dateSearch):
+    searchedDate =[]
+
+    for game in Games.partidos:
+            if dateSearch in game.date.split(' '):
+                searchedDate.append(game)
+            
+    if len(searchedDate) != 0:
+        print(f"\nThe games being played in this date are: ")
+        for game in searchedDate:
+            print(f'''HOME TEAM: {game.home_team}
+AWAY TEAM: {game.away_team}
+DATE: {game.date}
+ID: {game.id}
+STADIUM: {game.stadium} 
+ID STADIUM: {game.stadium_id}
+''')
+
+    else:
+        print('This is not an available date.')
+
+            #SEARCH BY NAME OF PRODUCT
+
+def searchProduct(restaurantList ,product_name):
+    for product in Product.productos:
+        if product_name in product.name.upper():
+            if product_name == product.name.upper():
+                print(f'***********{product.restaurant}***********')
+                product.mostrar()
+    
+                    
+                            
+          
+            #SEARCH BY TYPE OF PRODUCT
+
+def searchTypeProduct(restaurantList, product_type):
+    for product in Product.productos:
+            if product_type in product.type:
+                if product_type == product_type:
+                    print(f'***********{product.restaurant}***********')
+                    product.mostrar()
+            elif product_type != "beverages" and product_type != "food":
+                print("None xd")
+
+            
+
+           
+            #SEARCH BY RANGE OF PRICE
+
+def searchPriceRange(restaurantList, lowerNum, higherNum):
+    print("IF THERE ARE NO ANSWERS, THEN THERE ARE NO RESTAURANTS THAT SELL BETWEEN THIS RANGE.\n")
+    for product in Product.productos:
+            if product.price > lowerNum and product.price < higherNum:
+                print(f'***********{product.restaurant}***********')
+                product.mostrar()
+            
+            
+
+  #VALIDACION DE CLIENTE VIP PARA INGRESO RESTAURANTE          
+def VIPClientIDValid(clientIDRest, cedulaVIPs):
+        if str(clientIDRest) in cedulaVIPs:
+            return True
+        else:
+            return False
+
+#PAGO PROCESO
+def processPurchase(pickSeat,clientTicket, ticketIDGen, ticketsIDVIP, clientName, clientID, clientAge, clientGame, cedulaVIPs, discountpercentage):
+    seat_available = False
+    seat = None
+    game_pick = -1
+    while not seat_available:
+        for id, game in enumerate(Games.partidos):
+            if game.id == clientGame:
+                game_pick = id
+                break
+        if game_pick >=0:
+            break
+    for game in Games.partidos:
+        if game.id == clientGame:
+            seat = game.capacity
+
+
+    print('Please select your seat. You need to input the coordinate of the seat by row and column.')
+    Games.partidos[game_pick].mostrarAsiento()
+    while True:
+        print(' ')
+        seat_row = (input('SEAT: '))
+        column_row = (input('ROW: '))
+        if seat_row.isnumeric() and column_row.isnumeric():
+            seat_row= int(seat_row) - 1
+            column_row = int(column_row) - 1
+        
+            if seat_row > seat[0] or seat_row < 0: 
+                print("Please enter a valid seat")
+            if column_row > seat[1] or column_row < 0:
+                print("Please enter a valid seat")
+            else:
+                break
+        else:
+            print('THIS IS NOT A NUMERIC VALUE.')
+    if Games.partidos[game_pick].seats[seat_row][column_row] == "O":
+        print(f'SEAT {seat_row},{column_row} IS NOT AVAILABLE, SORRY. \n')
+    else:
+        seat_available = True
+
+    if seat_available:
+        discount = 0
+        if clientTicket == 'GENERAL':
+            clientTicketCode = random.randint(1000,4000)
+            
+            ticket_price = 50
+            ticketIVA = ticket_price+(ticket_price*0.16)
+            if discountpercentage == []:
+                discount = 0
+            else: 
+                discount = 0.50
+            descuentoTicket = discount*ticketIVA
+            total = ticketIVA - descuentoTicket
+
+            
+            for game in Games.partidos:
+                if clientGame == game.id:
+                    pickSeat.append(seat_row)
+                    pickSeat.append(column_row)
+                    resume(clientName, clientID, seat_row, column_row, clientTicketCode, 
+            clientTicket, descuentoTicket, ticketIVA, total, clientGame, game)
+                    path = input('Do you confirm your purchase? Y-Yes. N-No: ').upper()
+                    if path == 'Y':
+                        ticketIDGen.append(clientTicketCode)
+                        Ticket.tickets.append(Ticket(clientTicketCode, seat_row, column_row, clientGame, game.stadium_id, 'GENERAL' ))
+                        Client.clients.append(General(clientName, clientID, clientAge, clientGame,  game.stadium_id, game.stadium, seat_row, column_row, clientTicket,  'Inasistente', clientTicketCode ))
+                        invoice(clientName, clientID, seat_row, column_row, clientTicketCode, 
+            clientTicket, descuentoTicket, ticketIVA, total, clientGame, game)
+                        Games.partidos[game_pick].seats[seat_row][column_row] ="O"
+                        Games.partidos[game_pick].ticketsSold.append(Ticket.tickets)
+                        
+                    elif path == 'N':
+                        return 'CANCELLED'
+                    
+                    else:
+                        print("THIS IS NOT AN ACCEPTED VALUE.")
+
+        if clientTicket == 'VIP':
+            clientTicketCode = random.randint(1000,4000)
+            
+            ticket_price = 120
+            ticketIVA = ticket_price+(ticket_price*0.16)
+            if discountpercentage == []:
+                discount = 0
+            else: 
+                discount = 0.50
+            descuentoTicket = discount*ticketIVA
+            total = ticketIVA - descuentoTicket
+
+            for game in Games.partidos:
+                
+                        if clientGame == game.id:
+                            pickSeat.append(seat_row)
+                            pickSeat.append(column_row)
+                            resume(clientName, clientID, seat_row, column_row, clientTicketCode, 
+                    clientTicket, descuentoTicket, ticketIVA, total, clientGame, game)
+                            path = input('Do you confirm your purchase? Y-Yes. N-No: ').upper()
+                            if path == 'Y':
+                                
+                                        ticketsIDVIP.append(clientTicketCode)
+                                        Ticket.tickets.append(Ticket(clientTicketCode, seat_row, column_row, clientGame, game.stadium_id, 'GENERAL' ))
+                                        Client.clients.append(VIP(clientName, clientID, clientAge, clientGame,  game.stadium_id, game.stadium, seat_row, column_row, clientTicket,  "Inasistente" , clientTicketCode, None))
+                                        invoice(clientName, clientID, seat_row, column_row, clientTicketCode, 
+                            clientTicket, descuentoTicket, ticketIVA, total, clientGame, game)
+                                        cedulaVIPs.append(clientID)
+                                        Games.partidos[game_pick].seats[seat_row][column_row] ="O"
+                                        Games.partidos[game_pick].ticketsSold.append(Ticket.tickets)
+                                        break
+
+                            elif path == 'N':
+                                return 'CANCELLED'
+                            
+                            else:
+                                print("THIS IS NOT AN ACCEPTED VALUE.")
+
+#VALIDACION DE VAMPIRO 
+def valid(a, b):
+     if len(a) != len(b):
+        
+        return False
+     
+     return Counter(a) == Counter(b)
+
+#FACTURAS Y VARIOS
+         
+def invoice(clientName, clientID, seat_row, column_row, ticket, clientTicket, descuentoTicket, ticketIVA, total, clientGame, games):
+    total = ticketIVA -descuentoTicket
+    print(f''' SUCCESFUL PAYMENT!
+
 ****************** INVOICE ******************
 CLIENT NAME: {clientName}
 CLIENT ID: {clientID}
-SEAT: {pickSeat}
-TYPE OF TICKET: {ticketType}
+SEAT: ROW ----> {seat_row}, COLUMN ----> {column_row}
+TYPE OF TICKET: {clientTicket}
 CODE: {ticket}
-DISCOUNT: {descuento}
-PRECIO IVA: {ticketprecio}
+DISCOUNT: {descuentoTicket}
+PRECIO IVA: {ticketIVA}
 TOTAL:{total}''')
-    for game in games:
-        if str(clientGame) == game['id']:
-            print('GAME:', game['home_team'], 'vs.', game['away_team'] )
-            print('____________________________________')
-#FUNCIONES DE BUSQUEDA
-            #SEARCH BY TEAM
-def searchTeam(teams, games, country_name, stadiums):
-   for game in games:
-        for stadium in stadiums:
-            if country_name == game['home_team'].upper() or country_name == game['away_team'].upper():
-                if game['stadium_id'] == stadium['id']:
-              
-                 print(f'''HOME TEAM: {game['home_team']}
-AWAY TEAM: {game['away_team']}
-DATE: {game['date']}
-STADIUM: {stadium['name']}
-ID: { game['id']}
+    print('GAME: ', games.home_team, 'vs.', games.away_team)
+    print('STADIUM:', games.stadium)
+    print('DATE:', games.date)
+    
+    print('____________________________________')
 
-''')
-            #SEARCH BY STADIUM
-def searchStadiums(games, stadiums, stadium_ID):
-    for game in games:
-        for stadium in stadiums:
-            if stadium_ID == game['stadium_id']:
-                if stadium['id'] == game['stadium_id']:
-                    print(f'''HOME TEAM: {game['home_team']}
-AWAY TEAM: {game['away_team']}
-DATE: {game['date']}
-STADIUM: {stadium['name']}
-ID: { game['id']}
+def resume(clientName, clientID, seat_row, column_row, ticket, clientTicket, descuentoTicket, ticketIVA, total, clientGame, games):
+    total = ticketIVA -descuentoTicket
+    print(f'''
+-------------------- RESUME ------------------
+CLIENT NAME: {clientName}
+CLIENT ID: {clientID}
+SEAT: ROW ----> {seat_row}, COLUMN ----> {column_row}
+TYPE OF TICKET: {clientTicket}
+CODE: {ticket}
+DISCOUNT: {descuentoTicket}
+PRECIO IVA: {ticketIVA}
+TOTAL:{total}''')   
+    print('GAME: ', games.home_team, 'vs.', games.away_team)
+    print('STADIUM:', games.stadium)
+    print('DATE:', games.date)
+    
+    print('____________________________________')
 
-''')
-            #SEARCH BY DATE OF GAME
-def searchDate(games, dateSearch, dias, stadiums):
-    for game in games:
-        for stadium in stadiums:
-            if dateSearch in game['date'].split(' '):
-                if stadium['id'] == game['stadium_id']:
-                    print(f'''HOME TEAM: {game['home_team']}
-AWAY TEAM: {game['away_team']}
-DATE: {game['date']}
-STADIUM: {stadium['name']}
-ID: { game['id']}
 
-''')
+def invoiceProduct(purchased_items,product_buyBrute, discountPrice, totalBuy):
+    print('________________________________________________')
+    for product in purchased_items:
+        product.mostrarFactura()
+    print(f'''TOTAL BRUTE: {product_buyBrute}
+DISCOUNT: {discountPrice}
 
-            #SEARCH BY NAME OF PRODUCT
-def searchProduct(restaurantList ,product_name):
-    for restaurant in restaurantList:
-        for product in restaurant['products']:
-            if product_name == product['name'].upper():
-                
-                         print(f'***{restaurant["name"]}***')
-                         print(f'''Name ---> {product["name"]}
- Price (IVA) ---> {product["price"]*0.14 + product["price"]}''')
-                         if product['type'] == 'beverages':
-                             if product['name'] == 'Beer':
-                                 print('TYPE: Alcohol\n')
-                             else:
-                                 print('TYPE: No-Alcohol\n')
-                         elif product['type'] == 'food':
-                             if product['name'] == 'Fish and Chips':
-                                 print('TYPE: Packaged\n')
-                             else:
-                                 print('TYPE: Prepared\n')
-            #SEARCH BY TYPE OF PRODUCT
-def searchTypeProduct(restaurantList, product_type):
-    for restaurant in restaurantList:
-        for product in restaurant['products']:
-            if product_type == product['type']:
-                print(f'***{restaurant["name"]}***')
-                print(f'''Name ---> {product["name"]}
- Price (IVA) ---> {product["price"]*0.14 + product["price"]}''')
-                if product['type'] == 'beverages':
-                             if product['name'] == 'Beer':
-                                 print('TYPE: Alcohol\n')
-                             else:
-                                 print('TYPE: No-Alcohol\n')
-                elif product['type'] == 'food':
-                    if product['name'] == 'Fish and Chips':
-                        print('TYPE: Packaged\n')
-                    else:
-                        print('TYPE: Prepared\n')
-            #SEARCH BY RANGE OF PRICE
-def searchPriceRange(restaurantList, lowerNum, higherNum):
-    for restaurant in restaurantList:
-        for product in restaurant['products']:
-            if product['price'] > lowerNum and product['price'] < higherNum:
-                print(f'***{restaurant["name"]}***')
-                print(f'''Name ---> {product["name"]}
- Price (IVA) ---> {product["price"]*0.14 + product["price"]}''')
-                if product['type'] == 'beverages':
-                             if product['name'] == 'Beer':
-                                 print('TYPE: Alcohol\n')
-                             else:
-                                 print('TYPE: No-Alcohol\n')
-                elif product['type'] == 'food':
-                    if product['name'] == 'Fish and Chips':
-                        print('TYPE: Packaged\n')
-                    else:
-                        print('TYPE: Prepared\n')
-            
-def processPurchase(pickSeat, clientTicket, ticketIDGen, ticketsIDVIP, clientName, clientID, clientAge, clientGame):
-    while True:
-        #viewSeats(stadium) 
-        buyConfirm = input('Do you confirm your purchase? Y-Yes N-No: ').upper()
-        if buyConfirm.isnumeric() == True:
-            print('This is not an accepted value, its either Y or N. Not a number.')
-        elif buyConfirm == 'Y' or buyConfirm == "N":
-            if buyConfirm == 'Y':
-                if clientTicket == 'GENERAL':
-                    clientTicketCode = random.randint(1000,4000)
-                    ticketIDGen.append(clientTicketCode)
-                    Client.clients.append(General(clientName, clientID, clientAge,clientGame, pickSeat, clientTicket,  clientTicketCode ))
-                    return clientTicketCode
-                    
-                if clientTicket == 'VIP':
-                    clientTicketCode = random.randint(1000,4000)
-                    ticketsIDVIP.append(clientTicketCode)
-                    Client.clients.append(VIP(clientName, clientID, clientAge,clientGame, pickSeat, clientTicket,  clientTicketCode))
-                    return clientTicketCode
+TOTAL: {totalBuy}
+________________________________________________''')
+    
 
-def getDescuento(cedula):
-    pass
 
+def getPerfect(clientIDRest):
+    aux = clientIDRest -1 
+    acum = 0
+    list=[]
+    
+    while aux >= 1:
+        if clientIDRest % aux == 0:
+            acum += aux
+            list.append(aux)
+
+        aux -= 1
+    if sum(list) == clientIDRest:
+        return 0.15
+    else:
+        return 0
+        
 #FUNCIONES DE ESTETICA QUE HACEN QUE SE VEA MAS AMIGABLE EL CODIGO
 def welcome():
     print("""_____________________
@@ -191,8 +384,11 @@ def main():
     ticketIDGen = []
     ticketsIDVIP = []
     descuento = 0
+    discountpercentage = []
     ticketsUsados = []
     cedulaVIPs= []
+    pickSeat = []
+    purchased_items =[]
 
 
     #BUSQUEDA DE INFORMACION DE LAS APIS
@@ -232,14 +428,15 @@ def main():
                     for restaurant in stadium['restaurants']:
                         for product in restaurant['products']:
                             if product['type'] == "beverages":
-                                Product.productos.append(Bebida(restaurant['name'], product['name'], product['price'], product['name']))
+                                Product.productos.append(Bebida(restaurant['name'], stadium['id'], product['name'], product['quantity'], product['price'], product['type'], product['adicional']))
                             elif product['type'] == "food":
-                                Product.productos.append(Food(restaurant['name'], product['name'], product['price'], product['name']))                   
+                                Product.productos.append(Food(restaurant['name'], stadium['id'], product['name'], product['quantity'], product['price'], product['type'], product['adicional']))                   
         #AVAILABLE PRODUCTS
     
     for stadium in stadiums:
         for restaurant in stadium['restaurants']:
             restaurantList.append(restaurant)
+
     for stadium in stadiums:
         for restaurant in stadium['restaurants']:
                 for menu in restaurant['products']:
@@ -249,13 +446,14 @@ def main():
         for stadium in stadiums:
             if game['stadium_id'] == stadium['id']:
                 Games.partidos.append(Games(game['home_team'], game['away_team'],
-                game['date'], stadium['name'], game['id']))
+                game['date'], game['stadium_id'], stadium['name'], stadium['capacity'], game['id']))
             #IDS  
     for game in games:
         gamesID.append(game['id'])
 
     welcome()
     while True:
+      
         try:
             mainPath = int(input('''What can we do for you today?
 1. Games and Stadium management.
@@ -266,7 +464,7 @@ def main():
 6. End of the day.
 7. Exit
 ----> '''))
-            #MODULO UNO, AQUI ENCONTRARAS LAS FUNCIONES BASICAS DE LOS PARTIDOS 
+              #MODULO 1, AQUI ENCONTRARAS LAS FUNCIONES BASICAS DE LOS PARTIDOS 
             if mainPath == 1:
                 while True:
                     secondPath = int(input('''What would you like to do?
@@ -308,7 +506,6 @@ def main():
     ---> '''))
                                 #BUSQUEDA POR PAIS
                             if searchPath == 1:
-                                viewTeams(teams)
                                 while True:
 
                                     country_name = (input("Please enter the name of the country you wish to see the games of: ")).upper()
@@ -317,15 +514,13 @@ def main():
                                     elif  country_name not in equipos_name:
                                         print('Youre a loser! your team does not play in the world cup')
                                     else:
-                                        print('____________________\n')
-                                        print('THE GAMES BEING PLAYED BY THIS COUNTRY ARE:')
-                                        searchTeam(teams, games, country_name, stadiums)
+                                        print('____________________')
+                                        searchTeam(country_name)
                                         print('____________________')
                                         break
 
                                 #BUSQUEDA POR ESTADIO
                             elif searchPath == 2:
-                                viewStadium(stadiums)
                                 while True:
                                     stadium_ID = int((input("Please enter the ID of the stadium you wish to see the games being played of: ")))
                                     if stadium_ID > len(Stadium.estadio) or stadium_ID <= 0:
@@ -333,7 +528,7 @@ def main():
                                     else:
                                             print('____________________\n')
                                             print('THE GAMES BEING PLAYED IN THIS STADIUM ARE:')
-                                            searchStadiums(games, stadiums, stadium_ID)
+                                            searchStadiums(stadium_ID)
                                             print('____________________')
                                             break
                                 
@@ -351,7 +546,7 @@ def main():
                                         if dateSearch in dias:
                                             print('____________________\n')
                                             print('THE GAMES BEING PLAYED THIS DAY ARE: \n')
-                                            searchDate(games, dateSearch, dias, stadiums)
+                                            searchDate(dateSearch)
                                             print('____________________')
                                             break
                                         else:
@@ -370,28 +565,55 @@ def main():
                 
                     break
 
+
                 #MODULO 2, REGISTRO DE VENTA DE ENTRADAS <<< NOT FINISHED >>> FALTA MUESTRA DE ASIENTOS Y DESCUENTO  
             elif mainPath == 2:
                 while True:
                     #DATOS DEL CLIENTE
                             #NAME
                     while True:
-                        clientName = input('Please enter your name: ')
+                        clientName = input('Please enter your name: ').capitalize()
                         #VALIDACION
-                        if clientName.isalpha() == True:
-                            break
-                               
-                        else:
+                        if clientName.isnumeric() == True:
                             print('Please enter a valid name. This is a numeric value.')
+                        else:
+                            break
+                            
                         
                         #ID
                     while True:
-                        clientID = (input('Please enter your ID: '))
+                        clientID = ((input('Please enter your ID: ')))
                         if clientID.isnumeric() == True:
+                            if len(clientID) %2 == 0:
+                                
+                                for x in range(0,int(math.pow(10, len(str(clientID))/2))):
+                                    
+                                    for y in range(0,int(math.pow(10, len(str(clientID))/2))):
+                                        if (x*y == int(clientID)):
+                                            if (valid(str(str(x)+''+str(y)), str(clientID))):
+                                                discountpercentage.append(0.50)
+                                                    
+                                        else:
+                                            pass
+                            elif len(clientID) %2 != 0:
+                                discountpercentage = []
+                                pass
+                                        
+                                            
+                            
+                                            
+        
+                                
                             break
+
                         else:
                             print('Please enter a valid value')
-
+                    
+                    
+                    if discountpercentage == []:
+                        pass
+                    elif discountpercentage[0] == 0.50:
+                        print("CONGRATS! YOU GOT A 50% OFF")
                          #AGE
                     while True:
                         clientAge =(input('Please enter your age: '))
@@ -432,78 +654,61 @@ def main():
                                             if clientTicket == 1 or clientTicket ==2:
                                                 if clientTicket ==1:
                                                     clientTicket = 'VIP'
-                                                    cedulaVIPs.append(clientID)
-                                                    pickSeat = int(input('Please pick a seat: '))
-                                                    ticket = processPurchase(pickSeat,clientTicket, ticketIDGen, ticketsIDVIP, clientName, clientID, clientAge, clientGame)
-                                                    ticketIVA = 120+(120*0.16)
-                                                    total = ticketIVA - descuento
-                                                
-                                                    invoice(clientName, clientID, pickSeat, ticket, 
-                                                    clientTicket, descuento, ticketIVA, total, clientGame, games)
-                                                    break
-                           
-                                                
-                                                elif clientTicket == 2:
-                                                    clientTicket = 'GENERAL'
-                                                    pickSeat = int(input('Please pick a seat: '))
-                                                    ticket = processPurchase(pickSeat,clientTicket, ticketIDGen, ticketsIDVIP,
-                                                     clientName, clientID, clientAge, clientGame)
-                                                    ticketIVA = 50+(50*0.16)
-                                                    total = ticketIVA - descuento
-                                                    invoice(clientName, clientID, pickSeat, ticket, 
-                                                    clientTicket, descuento, ticketIVA, total, clientGame, games)
-                                                    break
-                                            
-               
-                                            else:
-                                                print('This is not an available option. Try again')
-                                            
-                                        else:
-                                            print("This was not an accepted value try again.")
-                                
-                            else:
-                                    print('This ticket isnt available')
 
+                                                    processPurchase(pickSeat,clientTicket, ticketIDGen, ticketsIDVIP, clientName,
+                                                     clientID, clientAge, clientGame, cedulaVIPs, discountpercentage)
+                                                if clientTicket ==2:
+                                                    clientTicket = 'GENERAL'
+
+                                                    processPurchase(pickSeat,clientTicket, ticketIDGen, ticketsIDVIP, clientName,
+                                                     clientID, clientAge, clientGame, cedulaVIPs, discountpercentage)
+                                                    break
+                                   
+                                                else:
+                                                    print('')
+                                                    break
+                                            break
+                                        break
+                                    break
                             break
-                        else:
-                            print('This is not an ID.')           
-                            
-                    break  
-                #FALTA MOSTRAR LA ENTRADA AL PARTIDO
+                        break
+                    break
+    
+                #MODULO 3, MUESTRA Y REGISTRA LA ENTRADA A LOS PARTIDOS.
             elif mainPath == 3:
                 while True:
-                    gameID = int(input('Please enter the game ID of the game your attending: '))
-                    if str(gameID) in gamesID:
                         verifyTicket = int(input('Please enter your ticket code: '))
                         if verifyTicket not in ticketsUsados:
                             if verifyTicket in ticketsIDVIP or verifyTicket in ticketIDGen:
                                 ticketsUsados.append(verifyTicket)
-                                print('Welcome!')
+                                for client in Client.clients:
+                                    if verifyTicket == client.confirmation:
+                                        print(f'Welcome to the {client.stadium} stadium')
+                                        client.asistencia = "Asistente"
+                                        client.mostrarClient()
 
                                 break
                             else:
                                 print('Your code is fake\n')
+                                break
                         else:
                             print('Someone already used this ticket\n')
-                    else:
-                        print('This game does not exist. \n')
-                    
-
-              
-                #MODULO 3, GESTION DE RESTAURANTES Y BUSQUEDA DE PRODUCTOS
+            
+                #MODULO 4, GESTION DE RESTAURANTES Y BUSQUEDA DE PRODUCTOS
             elif mainPath == 4:
-                
-                pathRestaurants = int(input('''What would you like to do?
-1. See all the menus.
-2. Make a search. '''))
+                while True:
+                    pathRestaurants = int(input('''What would you like to do?
+    1. See all the menus.
+    2. Make a search. 
+    3. Return. '''))
 
-                #MENUS DE PRODUCTOS
-                if pathRestaurants == 1:
-                 viewMenus(stadium)
+                    #MENUS DE PRODUCTOS
+                    if pathRestaurants == 1:
+                        viewMenus(stadium)
 
-                    #BUSQUEDAS DE PRODUCTOS
-                elif pathRestaurants == 2:
-                    while True:
+                        #BUSQUEDAS DE PRODUCTOS
+                    elif pathRestaurants == 2:
+                     while True:
                         pathSearchRestaurant = int(input('''What type of search would you like to do?
     1. Search by name.
     2. Search by type.
@@ -518,6 +723,7 @@ def main():
                                 if product_name.isnumeric() == True:
                                     print('This is not a valid option. Please enter a name and not a number.')
                                 elif  product_name not in productStock:
+                                    print(productStock)
                                     print('This product isnt available. You just spent 120 dollars for nothing.')
                                 else:
                                     print('____________________\n')
@@ -575,7 +781,114 @@ IS THE START OF THE RANGE, THE SECOND ONE THE LAST ONE.
                         #RETURN
                         if pathSearchRestaurant == 4:
                             break
-              
+                    
+                    elif pathRestaurants == 3:
+                        break
+                    
+                    else:
+                            print('Please enter a valid option.')
+                    
+                        
+            elif mainPath == 5:
+                print('''___________________________
+
+TO ENTER THIS AREA YOU NEED TO BE A VIP COSTUMER,
+PLEASE ENTER YOUR ID. ''')
+
+                clientIDRest = int(input('----> '))
+                VIPStatus = VIPClientIDValid(clientIDRest, cedulaVIPs)
+                product_menu =[]
+                purchased_items = []
+                if VIPStatus == True:  
+                     for client in Client.clients:
+                                    if str(clientIDRest) ==  client.id:
+                                        for product in Product.productos:
+                                            if client.stadium_id == product.stadium_id:
+                                                    product_menu.append(product.name.upper())
+                                                    product.mostrar()
+
+        
+
+                     while True:
+                        
+                        pathPurchased = int(input("""What do you want to do?
+1. Make a purchase.
+2. View purchase.
+----> """))
+                        
+                        if pathPurchased == 1:
+        
+                                for client in Client.clients:
+                                    if str(clientIDRest) ==  client.id:
+                                                productBuy = input("Please enter the name of the product you want to buy: ").upper()
+                                
+                                                if productBuy not in product_menu:
+                                                        print("This is not an available product")
+                                                else:
+                                                        for product in Product.productos:
+        
+                                                            if productBuy == product.name.upper():
+                                                                if client.stadium_id == product.stadium_id:
+                                                                     if product.additional != "alcoholic":
+                                                                            purchased_items.append(product)
+                                                                        
+                                                            
+
+                                                                     else:
+                                                                            if client.age < 18: 
+                                                                                print("You cant buy this.")
+                                                                            else:
+                                                                                purchased_items.append(product)                                       
+                                                            
+                        if pathPurchased ==2:
+                            if len(purchased_items) == 0:
+                                print("There are no items.")
+                            else:
+                                
+                                product_brute_list = []
+                                discountPerfect = getPerfect(clientIDRest)
+                                
+                                for product in purchased_items:
+                                    product_brute_list.append(product.price)
+                                product_buyBrute = sum(product_brute_list)
+                                discountPrice =discountPerfect*product_buyBrute
+                                totalBuy= product_buyBrute -  discountPrice 
+
+                                invoiceProduct(purchased_items,product_buyBrute, discountPrice, totalBuy)
+
+                                finalCall = (input("Would you like to finish you purchase? Y-Yes N-No.")).upper()
+                                if finalCall == 'Y':
+                                    for product in Product.productos:
+                                        for productx in purchased_items:
+                                         if product == productx:
+                                            product.quantity = product.quantity -1
+                                            
+
+                                    for client in Client.clients:
+                                        if str(clientIDRest) == client.id:
+                                            print('SUCCESS PAY!')
+                                            print('********************INVOICE*******************')
+                                            print(f'''NAME: {client.name} 
+ID: {client.id}
+            {product.restaurant}
+DISCOUNT: {discountPrice}
+''')
+                                        for product in purchased_items:
+                                            product.mostrar()
+                                        print(f'TOTAL: {totalBuy}\n')
+                                        break
+                                if finalCall == 'N':
+                                    purchased_items = []
+                                    break
+
+                                elif finalCall != 'N' and finalCall != 'Y':
+                                    print('This is not an accepted value.')
+                                break
+
+
+                else:
+                    print("Youre not a vip costumer.")
+
             elif mainPath == 7:
                 goodbye()
                 break
@@ -583,11 +896,11 @@ IS THE START OF THE RANGE, THE SECOND ONE THE LAST ONE.
             else:
                 print('Please enter a valid value.')
 
+
         except Exception as e:
+            print('_______________________________\n')
             print('___________________________\n')
             print('ERROR:', e)
             print("Sorry! Something went wrong, please try again.")
-            print('___________________________')
-
-
+            
 main()
