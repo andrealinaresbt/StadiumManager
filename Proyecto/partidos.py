@@ -1,7 +1,7 @@
 class Games:
     partidos =[]
     seat =[]
-    def __init__(self,home_team, away_team, date, stadium_id, stadium, capacity, id):
+    def __init__(self,home_team, away_team, date, stadium_id, stadium, capacity, id, tickets_Sold, attendance):
         self.home_team = home_team
         self.away_team = away_team
         self.date = date
@@ -11,17 +11,18 @@ class Games:
         self.capacity = capacity
         self.seats = [[0 for i in range(self.capacity[1])] for _ in range(self.capacity[0])]
         self.ticketsSold = []
-        self.attendance = []
+        self.attendance = attendance
+        self.tickets_Sold =tickets_Sold
+        
 
     def mostrarGames(self):
     
-        return(f'''HOME TEAM: {self.home_team}
+        return(f'''
+HOME TEAM: {self.home_team}
 AWAY TEAM: {self.away_team}
 DATE: {self.date}
 STADIUM: {self.stadium_id}
-ID: {self.id}
-
-''')
+ID: {self.id}''')
 
     def mostrarAsiento(self):
             rows = len(self.seats)

@@ -7,6 +7,7 @@ class Stadium:
         self.capacity = capacity
         self.location = location
         self.restaurant = restaurant
+       
         self.seats = [[0 for i in range(self.capacity[1])] for _ in range(self.capacity[0])]
 
     def mostrarStadiums(self):

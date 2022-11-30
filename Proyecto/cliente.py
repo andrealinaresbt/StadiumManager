@@ -19,7 +19,7 @@ class Client:
     
     def mostrarClient(self):
         print(f'''
-        ***************** ENTRANCE TICKET ********************
+***************** ENTRANCE TICKET ********************
 NAME: {self.name}
 ID: {self.id}
 SEAT: {self.seat_row}, {self.column_row}
@@ -27,4 +27,15 @@ GAME: {self.game}
 STADIUM: {self.stadium}
 TICKET: {self.ticket}
 ASISTENCIA: {self.asistencia}''')
+
+    def mostrar(self):
+            print(f'''
+    NAME: {self.name}
+    ID: {self.id}
+    SEAT: {self.seat_row}, {self.column_row}
+    GAME: {self.game}
+    STADIUM: {self.stadium}
+    TICKET: {self.ticket}
+    ASISTENCIA: {self.asistencia}
+    TOTAL SPENT: {self.clientBuy}''')
 

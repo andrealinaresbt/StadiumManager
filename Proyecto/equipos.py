@@ -1,6 +1,5 @@
 class Equipos:
     equipos = []
-    
 
     def __init__(self, name, flag, fifa_code, group, id):
         self.name = name
@@ -19,9 +18,7 @@ ID: {self.id}
 
 ''')
 
-    def countryID(self):
-            return('''COUNTRY: {} ---> {}
-''').format(self.name, self.id)
+    
 
 
 

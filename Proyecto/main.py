@@ -237,12 +237,16 @@ def processPurchase(pickSeat,clientTicket, ticketIDGen, ticketsIDVIP, clientName
                     if path == 'Y':
                         ticketIDGen.append(clientTicketCode)
                         Ticket.tickets.append(Ticket(clientTicketCode, seat_row, column_row, clientGame, game.stadium_id, 'GENERAL' ))
-                        Client.clients.append(General(clientName, clientID, clientAge, clientGame,  game.stadium_id, game.stadium, seat_row, column_row, clientTicket,  'Inasistente', clientTicketCode ))
+                        Client.clients.append(General(clientName, clientID, clientAge, clientGame,  game.stadium_id, game.stadium, seat_row, column_row, clientTicket,  'Inasistente', clientTicketCode, total))
                         invoice(clientName, clientID, seat_row, column_row, clientTicketCode, 
             clientTicket, descuentoTicket, ticketIVA, total, clientGame, game)
                         Games.partidos[game_pick].seats[seat_row][column_row] ="O"
                         Games.partidos[game_pick].ticketsSold.append(Ticket.tickets)
-                        
+                        for game in Games.partidos:
+                            if game.id == clientGame: 
+                                game.tickets_Sold += 1
+                        break
+
                     elif path == 'N':
                         return 'CANCELLED'
                     
@@ -273,12 +277,15 @@ def processPurchase(pickSeat,clientTicket, ticketIDGen, ticketsIDVIP, clientName
                                 
                                         ticketsIDVIP.append(clientTicketCode)
                                         Ticket.tickets.append(Ticket(clientTicketCode, seat_row, column_row, clientGame, game.stadium_id, 'GENERAL' ))
-                                        Client.clients.append(VIP(clientName, clientID, clientAge, clientGame,  game.stadium_id, game.stadium, seat_row, column_row, clientTicket,  "Inasistente" , clientTicketCode, None))
+                                        Client.clients.append(VIP(clientName, clientID, clientAge, clientGame,  game.stadium_id, game.stadium, seat_row, column_row, clientTicket,  "Inasistente" , clientTicketCode, total))
                                         invoice(clientName, clientID, seat_row, column_row, clientTicketCode, 
                             clientTicket, descuentoTicket, ticketIVA, total, clientGame, game)
                                         cedulaVIPs.append(clientID)
                                         Games.partidos[game_pick].seats[seat_row][column_row] ="O"
                                         Games.partidos[game_pick].ticketsSold.append(Ticket.tickets)
+                                        for game in Games.partidos:
+                                            if game.id == clientGame: 
+                                                game.tickets_Sold += 1 
                                         break
 
                             elif path == 'N':
@@ -362,7 +369,43 @@ def getPerfect(clientIDRest):
         return 0.15
     else:
         return 0
+
+def sort(list):
+    if len(list) > 1:
+        middle_p = len(list)//2
         
+        left = list[:middle_p]
+        right = list[middle_p:]
+
+        sort(left)
+        sort(right)
+        merge(list,left, right, middle_p)
+        
+        return list
+
+def merge(asistencia_list,left,right, middle_p):
+    i=0
+    j=0
+    m=0
+    while i < len(left) and j < len(right):
+        if left[i] <= right[j]:
+            asistencia_list[m] = left[i]
+            i += 1
+        else:
+            asistencia_list[m] = right[j]
+            j+=1
+        m+=1
+
+    while i < len(left):
+            asistencia_list[m] = left[i]
+            i += 1
+            m += 1
+ 
+    while j < len(right):
+            asistencia_list[m] = right[j]
+            j += 1
+            m += 1    
+
 #FUNCIONES DE ESTETICA QUE HACEN QUE SE VEA MAS AMIGABLE EL CODIGO
 def welcome():
     print("""_____________________
@@ -383,13 +426,14 @@ def main():
     restaurantList = []
     ticketIDGen = []
     ticketsIDVIP = []
-    descuento = 0
     discountpercentage = []
     ticketsUsados = []
     cedulaVIPs= []
     pickSeat = []
     purchased_items =[]
-
+    clientVIP = []
+    tickets_list = []
+    product_list = []
 
     #BUSQUEDA DE INFORMACION DE LAS APIS
     url_equipos = "https://raw.githubusercontent.com/Algoritmos-y-Programacion-2223-1/api-proyecto/main/teams.json"
@@ -446,7 +490,7 @@ def main():
         for stadium in stadiums:
             if game['stadium_id'] == stadium['id']:
                 Games.partidos.append(Games(game['home_team'], game['away_team'],
-                game['date'], game['stadium_id'], stadium['name'], stadium['capacity'], game['id']))
+                game['date'], game['stadium_id'], stadium['name'], stadium['capacity'], game['id'], 0,0))
             #IDS  
     for game in games:
         gamesID.append(game['id'])
@@ -683,9 +727,15 @@ def main():
                                 ticketsUsados.append(verifyTicket)
                                 for client in Client.clients:
                                     if verifyTicket == client.confirmation:
-                                        print(f'Welcome to the {client.stadium} stadium')
+                                        print(f'''
+Welcome to the {client.stadium} stadium! ''')
                                         client.asistencia = "Asistente"
                                         client.mostrarClient()
+                                        print('______________________________________')
+                                        
+                                        for game in Games.partidos:
+                                            if game.id == client.game: 
+                                                game.attendance += 1
 
                                 break
                             else:
@@ -693,6 +743,7 @@ def main():
                                 break
                         else:
                             print('Someone already used this ticket\n')
+                            break
             
                 #MODULO 4, GESTION DE RESTAURANTES Y BUSQUEDA DE PRODUCTOS
             elif mainPath == 4:
@@ -723,7 +774,7 @@ def main():
                                 if product_name.isnumeric() == True:
                                     print('This is not a valid option. Please enter a name and not a number.')
                                 elif  product_name not in productStock:
-                                    print(productStock)
+                                    
                                     print('This product isnt available. You just spent 120 dollars for nothing.')
                                 else:
                                     print('____________________\n')
@@ -800,13 +851,16 @@ PLEASE ENTER YOUR ID. ''')
                 product_menu =[]
                 purchased_items = []
                 if VIPStatus == True:  
+                     print('______________________________________')
+                     print('                MENU                  ')
+                     
                      for client in Client.clients:
                                     if str(clientIDRest) ==  client.id:
                                         for product in Product.productos:
                                             if client.stadium_id == product.stadium_id:
                                                     product_menu.append(product.name.upper())
                                                     product.mostrar()
-
+                     print('______________________________________')
         
 
                      while True:
@@ -814,6 +868,7 @@ PLEASE ENTER YOUR ID. ''')
                         pathPurchased = int(input("""What do you want to do?
 1. Make a purchase.
 2. View purchase.
+3. Exit
 ----> """))
                         
                         if pathPurchased == 1:
@@ -829,18 +884,27 @@ PLEASE ENTER YOUR ID. ''')
         
                                                             if productBuy == product.name.upper():
                                                                 if client.stadium_id == product.stadium_id:
-                                                                     if product.additional != "alcoholic":
+
+                                                                    if product.quantity == 0:
+                                                                        print("Sorry this product is not available. ")
+                                                                        
+                                                                    else:
+                                                                        if product.additional != "alcoholic":
                                                                             purchased_items.append(product)
+                                                                            print(" Added to chart! ")
+                                                                            break
                                                                         
                                                             
 
-                                                                     else:
-                                                                            if client.age < 18: 
-                                                                                print("You cant buy this.")
-                                                                            else:
-                                                                                purchased_items.append(product)                                       
-                                                            
-                        if pathPurchased ==2:
+                                                                        else:
+                                                                                if client.age < 18: 
+                                                                                    print("You cant buy this.")
+                                                                                else:
+                                                                                    purchased_items.append(product)
+                                                                                    print(" Added to chart! ")     
+                                                                                    break                                  
+                                                                
+                        elif pathPurchased ==2:
                             if len(purchased_items) == 0:
                                 print("There are no items.")
                             else:
@@ -853,7 +917,7 @@ PLEASE ENTER YOUR ID. ''')
                                 product_buyBrute = sum(product_brute_list)
                                 discountPrice =discountPerfect*product_buyBrute
                                 totalBuy= product_buyBrute -  discountPrice 
-
+                                print('\n                 RESUME                      ')
                                 invoiceProduct(purchased_items,product_buyBrute, discountPrice, totalBuy)
 
                                 finalCall = (input("Would you like to finish you purchase? Y-Yes N-No.")).upper()
@@ -862,33 +926,166 @@ PLEASE ENTER YOUR ID. ''')
                                         for productx in purchased_items:
                                          if product == productx:
                                             product.quantity = product.quantity -1
-                                            
+                                            Product.products_bought +=1
+
+                                    
 
                                     for client in Client.clients:
-                                        if str(clientIDRest) == client.id:
-                                            print('SUCCESS PAY!')
+                                        if str(clientIDRest) ==  client.id:
+                                            print('\nSUCCESSFUL PAY!')
                                             print('********************INVOICE*******************')
                                             print(f'''NAME: {client.name} 
 ID: {client.id}
-            {product.restaurant}
-DISCOUNT: {discountPrice}
-''')
-                                        for product in purchased_items:
-                                            product.mostrar()
-                                        print(f'TOTAL: {totalBuy}\n')
+
+            {product.restaurant}''')
+                                            for product in purchased_items:
+                                                product.mostrar()
+                                            print(f'DISCOUNT: {discountPrice}')
+                                            print(f'TOTAL: {totalBuy}\n')
+                                            client.clientBuy += totalBuy
+                                            break
+
+                                    if finalCall == 'N':
+                                        purchased_items = []
                                         break
-                                if finalCall == 'N':
-                                    purchased_items = []
+
+                                    elif finalCall != 'N' and finalCall != 'Y':
+                                        print('This is not an accepted value.')
                                     break
 
-                                elif finalCall != 'N' and finalCall != 'Y':
-                                    print('This is not an accepted value.')
-                                break
+                        elif pathPurchased ==3:
+                            break
 
+                        else:
+                            print('This is not a valid path. ')
 
                 else:
                     print("Youre not a vip costumer.")
+            elif mainPath ==6:
+                asistencia_list = []
+                clientVIP = []
 
+                if Ticket.tickets != []:
+                    
+                    for game in Games.partidos:
+                        asistencia_list.append(game.attendance)
+                        tickets_list.append(game.tickets_Sold)
+                    asistencia_list = sort(asistencia_list)
+                    tickets_list = sort(tickets_list)
+                
+                for product in Product.productos:
+                    product_list.append(product.quantity)
+                
+                
+                
+                product_list = sort(product_list)
+                n=1
+                
+                Games.partidos.sort(key=lambda x: x.attendance, reverse=True)
+                while True:
+                    path6 =int(input('''
+    What would you like to see?
+    1. Average VIP spendings.
+    2. Best to worst attendance.
+    3. Best attendance game.
+    4. Best sold game.
+    5. Top three most sold items.
+    6. Top three clients.
+    7. Exit.
+    ---->'''))      
+                    if path6 == 1:
+                        if Ticket.tickets != []:
+                           
+                            if len(Client.clients) != None:
+                                clientVIP = []
+                                for client in Client.clients:
+                                    
+                                    if client.ticket == "VIP":
+                                        
+                                        clientVIP.append(client.clientBuy)
+                                
+                                if len(clientVIP)==1:
+                                    clientVIP = clientVIP[0]
+                                    clientVIPAverage = clientVIP
+                                else:
+                                    clientVIP = sort(clientVIP)
+                                    
+                                    clientVIPAverage = sum(clientVIP)/len(clientVIP)
+                                print(f'The average VIP client spending is of {clientVIPAverage}')
+                                datos = open('datos.txt', 'w')
+                                datos.write(f'AVERAGE VIP SPENDING {clientVIPAverage}')
+                        else:
+                            print("There werent any vip clients")
+                    elif path6 ==2:
+
+                        print("THE ORDER FROM MORE TO LESS ASSISTED GAMES: ")
+                        for partido in Games.partidos:
+                            print(f'[{n}]')
+                            print(partido.mostrarGames())
+                            print(f'''ASISTENCIA: {partido.attendance}
+            BOLETOS VENDIDOS: {partido.tickets_Sold}
+            RELACION DE ASISTENCIA: DE {partido.tickets_Sold} FUERON {partido.attendance}''')
+                            n+=1
+
+                    elif path6 ==3:
+                        if Ticket.tickets != []:
+                            for game in Games.partidos:
+                                if asistencia_list[-1] == 0:
+                                    print("There is no most assisted game. ")
+                                elif asistencia_list[-1]==game.attendance:
+                                    print(f'The game or games with the most amount of attendance were of {asistencia_list[-1]} and they were: ')
+                                    print(game.mostrarGames())
+                                    print(f'''ASISTENCIA: {game.attendance}
+                BOLETOS VENDIDOS: {game.tickets_Sold}
+                RELACION DE ASISTENCIA: DE {game.tickets_Sold} FUERON {game.attendance}''')
+                                    datos.write(f'MOSTA ATTENDED GAME: {game.mostrarGames()}\n')
+                    elif path6 ==4:  
+                            if Ticket.tickets != []:
+                                for game in Games.partidos:
+                                    if tickets_list[-1] == game.tickets_Sold:
+                                        print(f'The game or games with the most amount of tickets sold were of {tickets_list[-1]} and they were: ')
+                                        print(game.mostrarGames())
+                                        print(f'''ASISTENCIA: {game.attendance}
+                    BOLETOS VENDIDOS: {game.tickets_Sold}
+                    RELACION DE ASISTENCIA: DE {game.tickets_Sold} FUERON {game.attendance}''')
+                                        datos.write(f'MOST SOLD GAME: {game.mostrarGames()}\n')
+                            else:
+                                print('There wasnt a more attendance game')
+                    elif path6 ==5:
+                        
+                        Product.productos.sort(key=lambda x: x.quantity)
+                        if Product.products_bought <3 or Product.products_bought == 0 :
+                            print('There werent enough purchases to make top three.')
+                            
+                        else:
+                            print('THE TOP THREE BEST SELLING PRODUCTS ARE: ')
+                            for i in Product.productos[0:3]:
+                                i.mostrarFactura()
+                                datos.write('TOP SELLING: ', i.mostrarFactura())
+                    elif path6 ==6:
+                        if len(Client.clients) < 3:
+                            print('There werent enough clients.')
+                        else:
+                            print('The top three clients are:')
+                            for client in Client.clients[0:3]:
+                                client.mostrar()
+                
+                                datos.write('TOP CLIENTS:', client.mostrar())
+                                
+                            
+
+                        
+                    elif path6 ==7:
+                        datos.close()   
+                        break
+
+
+
+
+
+
+                
+                
             elif mainPath == 7:
                 goodbye()
                 break

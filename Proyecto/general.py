@@ -1,9 +1,10 @@
 from cliente import Client
 
 class General(Client):
-   def __init__(self, name, id, age, game, stadium_id, stadium, seat_row, column_row, ticket,  asistence, confirmation):
+   def __init__(self, name, id, age, game, stadium_id, stadium, seat_row, column_row, ticket,  asistence, confirmation, clientBuy):
         super().__init__(name, id, age, game, stadium_id, stadium, seat_row, column_row, ticket, asistence)
         self.confirmation = confirmation
+        self.clientBuy =clientBuy
 
    def mostrarClient(self):
         super().mostrarClient()

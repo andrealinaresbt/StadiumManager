@@ -1,5 +1,6 @@
 class Product:
     productos =[]
+    products_bought=  0
     def __init__(self, restaurant, stadium_id, name, quantity, price,type, additional):
         self.restaurant = restaurant
         self.stadium_id = stadium_id
@@ -16,7 +17,7 @@ class Product:
 Price (IVA) ---> {self.price}
 Stock: {self.quantity}
 Type: {self.type}
-    Additional: {self.additional}
+Additional: {self.additional}
     ''')
 
     def mostrarFactura(self):
@@ -24,6 +25,8 @@ Type: {self.type}
 Price (IVA) ---> {self.price}
 Stock: {self.quantity}
 Type: {self.type}
-    Additional: {self.additional}
-    ''')
+Additional: {self.additional}
+    
+    
+________________________________________''')
 
